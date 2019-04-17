@@ -9,15 +9,17 @@ import telemetroly
 from tqdm import tqdm 
 
 query='afp'
-minDate='01-10-2018'
-maxDate='31-10-2018'
+minDate='01-07-2018'
+maxDate='30-07-2018'
+page=19
+
 bad_chars='[(){}<>,.@;:"\'?¿!¡/|]' 
 
 
 #q=next(search_query)
 #print(q.bib['title'].replace(' ','_'))
 
-search_query = telemetroly.search_pubs_query(query,minDate,maxDate)
+search_query = telemetroly.search_pubs_query(query,minDate,maxDate,page)
 
 f= open("..//"+query+maxDate+".txt","a+")#,errors = 'ignore'
 for q in tqdm(search_query):

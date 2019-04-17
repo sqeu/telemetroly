@@ -22,7 +22,7 @@ _HEADERS = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/41.0.2272.76 Chrome/41.0.2272.76 Safari/537.36',
     'accept': 'text/html,application/xhtml+xml,application/xml'
     }
-_HOST = 'https://www.telemetro.com'
+_HOST = 'http://www.telemetro.com'
 _NEWSSEARCH = '/busqueda/?page={0}&text={1}&minDate={2}&maxDate={3}&contentType=NWS'
 _SESSION = requests.Session()
 _PAGESIZE = 100
@@ -31,8 +31,10 @@ _ENCODING='utf-8'
 def _get_page(pagerequest):
     """Return the data for a page on telemetro.com"""
     # Note that we include a sleep to avoid overloading the scholar server
-    time.sleep(2+random.uniform(0, 5))
-    resp_url = _SESSION.get(pagerequest, headers=_HEADERS, cookies=_COOKIES,verify=False)
+    time.sleep(2+random.uniform(0, 6))
+    _GOOGLEID = hashlib.md5(str(random.random()).encode('utf-8')).hexdigest()[:16]
+    _COOKIES = {'GSP': 'ID={0}:CF=4'.format(_GOOGLEID)}
+    resp_url = _SESSION.get(pagerequest, headers=_HEADERS, cookies=_COOKIES)
     if resp_url.status_code == 200:
         return resp_url.text
     else:
@@ -64,14 +66,14 @@ def _body_in_soup(article_soup):
     """Generator that returns Publication objects from the search page"""
     summary=""
     body=""
-    resultList = article_soup.find("div", {"class" : lambda L: L and L.startswith('mce-body')})
-    for row in resultList.findAll("p", {"class": 'mce'}):
-        if summary == "":
-            summary = row.text
-        else:  
-            #and not row.find('a').has_attr('target')            
-            if not row.find('a') and not row.has_attr('dir') and not row.has_attr('lang'):
-                body = body +" <br>"+ row.text
+    for resultList in article_soup.findAll("div", {"class" : lambda L: L and L.startswith('mce-body')}):
+        for row in resultList.findAll("p", {"class": 'mce'}):
+            if summary == "":
+                summary = row.text
+            else:  
+                #and not row.find('a').has_attr('target')            
+                if not row.find('a') and not row.has_attr('dir') and not row.has_attr('lang'):
+                    body = body +" <br>"+ row.text
     return (summary,body)
         
         
