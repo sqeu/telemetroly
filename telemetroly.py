@@ -18,7 +18,7 @@ import time
 _GOOGLEID = hashlib.md5(str(random.random()).encode('utf-8')).hexdigest()[:16]
 _COOKIES = {'GSP': 'ID={0}:CF=4'.format(_GOOGLEID)}
 _HEADERS = {
-    'accept-language': 'en-US,en',
+    'accept-language': 'es-PE,es',
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/41.0.2272.76 Chrome/41.0.2272.76 Safari/537.36',
     'accept': 'text/html,application/xhtml+xml,application/xml'
     }
@@ -31,7 +31,7 @@ _ENCODING='utf-8'
 def _get_page(pagerequest):
     """Return the data for a page on telemetro.com"""
     # Note that we include a sleep to avoid overloading the scholar server
-    time.sleep(2+random.uniform(0, 6))
+    time.sleep(3+random.uniform(2, 6))
     _GOOGLEID = hashlib.md5(str(random.random()).encode('utf-8')).hexdigest()[:16]
     _COOKIES = {'GSP': 'ID={0}:CF=4'.format(_GOOGLEID)}
     resp_url = _SESSION.get(pagerequest, headers=_HEADERS, cookies=_COOKIES)
@@ -74,6 +74,13 @@ def _body_in_soup(article_soup):
                 #and not row.find('a').has_attr('target')            
                 if not row.find('a') and not row.has_attr('dir') and not row.has_attr('lang'):
                     body = body +" <br>"+ row.text
+        if summary.strip(' ') == "" or body == "":
+            for row in resultList.findAll("div", {"class": 'mce'}):
+                if summary.strip(' ') == "":
+                    summary = row.text
+                else:           
+                    if not row.find('a') and not row.has_attr('dir') and not row.has_attr('lang'):
+                        body = body +" <br>"+ row.text
     return (summary,body)
         
         

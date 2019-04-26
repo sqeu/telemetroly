@@ -9,9 +9,9 @@ import telemetroly
 from tqdm import tqdm 
 
 query='afp'
-minDate='01-07-2018'
-maxDate='30-07-2018'
-page=19
+minDate='01-03-2018'
+maxDate='31-03-2018'
+page=1
 
 bad_chars='[(){}<>,.@;:"\'?¿!¡/|]' 
 
