@@ -34,7 +34,12 @@ def _get_page(pagerequest):
     time.sleep(3+random.uniform(2, 6))
     _GOOGLEID = hashlib.md5(str(random.random()).encode('utf-8')).hexdigest()[:16]
     _COOKIES = {'GSP': 'ID={0}:CF=4'.format(_GOOGLEID)}
-    resp_url = _SESSION.get(pagerequest, headers=_HEADERS, cookies=_COOKIES)
+    try:
+        resp_url = _SESSION.get(pagerequest, headers=_HEADERS, cookies=_COOKIES)
+    except:
+        print("Error controlado: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response',))")
+        time.sleep(3+random.uniform(2, 6))
+        resp_url = _SESSION.get(pagerequest, headers=_HEADERS, cookies=_COOKIES)
     if resp_url.status_code == 200:
         return resp_url.text
     else:
@@ -67,12 +72,16 @@ def _body_in_soup(article_soup):
     summary=""
     body=""
     for resultList in article_soup.findAll("div", {"class" : lambda L: L and L.startswith('mce-body')}):
+        if resultList.find('blockquote'):
+            for u in resultList.findAll('blockquote', {"class" : lambda L: L and L.startswith('instagram')}):
+                unwanted = resultList.find('blockquote')
+                unwanted.extract()
         for row in resultList.findAll("p", {"class": 'mce'}):
             if summary == "":
                 summary = row.text
             else:  
                 #and not row.find('a').has_attr('target')            
-                if not row.find('a') and not row.has_attr('dir') and not row.has_attr('lang'):
+                if  not row.find('a') and not row.has_attr('dir') and not row.has_attr('lang'):
                     body = body +" <br>"+ row.text
         if summary.strip(' ') == "" or body == "":
             for row in resultList.findAll("div", {"class": 'mce'}):
@@ -81,6 +90,16 @@ def _body_in_soup(article_soup):
                 else:           
                     if not row.find('a') and not row.has_attr('dir') and not row.has_attr('lang'):
                         body = body +" <br>"+ row.text
+            if body == "":
+                old_summary=summary.replace("\x92","'").replace("\x93",'"').replace("\x94",'"')
+                summary=""
+                #One p tag
+                for row in old_summary.split('. '):
+                    if summary == "":
+                        summary = row + "."
+                    else:             
+                        body = body +". <br> "+ row
+                body=body[1:]        
     return (summary,body)
         
         
