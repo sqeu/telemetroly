@@ -27,7 +27,7 @@ _NEWSSEARCH = '/busqueda/?page={0}&text={1}&minDate={2}&maxDate={3}&contentType=
 _SESSION = requests.Session()
 _PAGESIZE = 100
 _ENCODING='utf-8'
-
+bad_char = ' \ufeff'
 def _get_page(pagerequest):
     """Return the data for a page on telemetro.com"""
     # Note that we include a sleep to avoid overloading the scholar server
@@ -121,8 +121,8 @@ class Publication(object):
         article_soup = _get_soup(_HOST+__data.find('a',href=True)['href'])
         body=_body_in_soup(article_soup)
         
-        self.bib['summary']=body[0]
-        self.bib['body']=body[1]
+        self.bib['summary']=body[0].replace(bad_char,'')
+        self.bib['body']=body[1].replace(bad_char,'')
                 
     def __str__(self):
         return pprint.pformat(self.__dict__)
