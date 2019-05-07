@@ -18,8 +18,9 @@ import time
 _GOOGLEID = hashlib.md5(str(random.random()).encode('utf-8')).hexdigest()[:16]
 _COOKIES = {'GSP': 'ID={0}:CF=4'.format(_GOOGLEID)}
 _HEADERS = {
-    'accept-language': 'es-PE,es',
-    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/41.0.2272.76 Chrome/41.0.2272.76 Safari/537.36',
+    'accept-language': 'es-AR,es',
+    #Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/41.0.2272.76 Chrome/41.0.2272.76 Safari/537.36
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36',
     'accept': 'text/html,application/xhtml+xml,application/xml'
     }
 _HOST = 'http://www.telemetro.com'
@@ -27,7 +28,7 @@ _NEWSSEARCH = '/busqueda/?page={0}&text={1}&minDate={2}&maxDate={3}&contentType=
 _SESSION = requests.Session()
 _PAGESIZE = 100
 _ENCODING='utf-8'
-bad_char = ' \ufeff'
+bad_chars = [' \ufeff','\u200e','\u200f']
 def _get_page(pagerequest):
     """Return the data for a page on telemetro.com"""
     # Note that we include a sleep to avoid overloading the scholar server
@@ -39,9 +40,13 @@ def _get_page(pagerequest):
     except:
         print("Error controlado: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response',))")
         time.sleep(3+random.uniform(2, 6))
-        resp_url = _SESSION.get(pagerequest, headers=_HEADERS, cookies=_COOKIES)
+        #_SESSION.get(pagerequest, headers=_HEADERS, cookies=_COOKIES)
+        resp_url = requests.get(pagerequest)
     if resp_url.status_code == 200:
         return resp_url.text
+    elif resp_url.status_code == 520:
+        print("Error controlado: 520: ('Origin Error')")
+        return _get_page(pagerequest)
     else:
         raise Exception('Error: {0} {1}'.format(resp_url.status_code, resp_url.reason))
         
@@ -74,8 +79,8 @@ def _body_in_soup(article_soup):
     for resultList in article_soup.findAll("div", {"class" : lambda L: L and L.startswith('mce-body')}):
         if resultList.find('blockquote'):
             for u in resultList.findAll('blockquote', {"class" : lambda L: L and L.startswith('instagram')}):
-                unwanted = resultList.find('blockquote')
-                unwanted.extract()
+                #unwanted = resultList.find('blockquote')
+                u.extract()
         for row in resultList.findAll("p", {"class": 'mce'}):
             if summary == "":
                 summary = row.text
@@ -107,7 +112,7 @@ class Publication(object):
     """Returns an object for a single publication"""
     def __init__(self, __data):
         self.bib = dict()
-        self.bib['title'] = __data.find('a').text
+        
         if __data.find('span'):
             self.bib['kicker'] = __data.find('span').text
         else:
@@ -120,9 +125,17 @@ class Publication(object):
         
         article_soup = _get_soup(_HOST+__data.find('a',href=True)['href'])
         body=_body_in_soup(article_soup)
-        
-        self.bib['summary']=body[0].replace(bad_char,'')
-        self.bib['body']=body[1].replace(bad_char,'')
+        bib_title = __data.find('a').text
+        bib_summary=body[0]
+        bib_body=body[1]
+        for bad_char in bad_chars:
+            bib_title=bib_title.replace(bad_char,'')
+            bib_summary=bib_summary.replace(bad_char,'')
+            bib_body=bib_body.replace(bad_char,'')
+            
+        self.bib['title'] = bib_title
+        self.bib['summary']=bib_summary
+        self.bib['body']=bib_body
                 
     def __str__(self):
         return pprint.pformat(self.__dict__)
