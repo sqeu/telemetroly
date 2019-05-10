@@ -19,11 +19,12 @@ for month in range(1, 13):
     months.append(month_str[-2:]+'-'+month_str[5:7]+'-'+month_str[:4])
 
 #for month in months[4:]:
-for month in months[:-1]:
+for month in months[-2:-1]:
+    month='31-01-2009'
     query='afp'
     minDate='01'+month[2:]
     maxDate=month
-    page=33
+    page=12
             
     #q=next(search_query)
     #print(q.bib['title'].replace(' ','_'))
@@ -39,7 +40,28 @@ for month in months[:-1]:
             f_e.write(q.bib['title']+"|"+q.bib['kicker']+"|"+q.bib['date']+"|"+q.bib['link']+"\n")
             f_e.close()
     f.close()
+
+#####
+    month='30-11-2010'
+    query='afp'
+    minDate='01'+month[2:]
+    maxDate=month
+    page=11
+            
+    #q=next(search_query)
+    #print(q.bib['title'].replace(' ','_'))
     
+    search_query = telemetroly.search_pubs_query(query,minDate,maxDate,page)
+    
+    f= open("..//"+query+maxDate+".txt","a+")#,errors = 'ignore'
+    for q in tqdm(search_query):
+        try:
+            f.write(q.bib['title']+"|"+q.bib['kicker']+"|"+q.bib['date']+"|"+q.bib['link']+"|"+q.bib['summary']+"|"+q.bib['body']+"\n")
+        except: 
+            f_e= open("..//"+query+maxDate+"_exception.txt","a+")
+            f_e.write(q.bib['title']+"|"+q.bib['kicker']+"|"+q.bib['date']+"|"+q.bib['link']+"\n")
+            f_e.close()
+    f.close()
 
 
 
